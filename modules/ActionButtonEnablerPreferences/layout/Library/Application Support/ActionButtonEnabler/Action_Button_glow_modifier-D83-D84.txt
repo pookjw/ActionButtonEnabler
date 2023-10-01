@@ -1,0 +1,57 @@
+//
+//  Action_Button_glow_modifier-D83-D84.txt
+//
+//  Copyright © 2023 Apple Inc. All rights reserved.
+//
+
+float2 closestPointOnLineSegmentF(float2 point, float2 segmentStart, float2 segmentEnd) {
+    const float2 segment = segmentEnd - segmentStart;
+    const float segmentLength = length(segment);
+    const float2 direction = segment / segmentLength;
+    
+    const float along = dot(point - segmentStart, direction);
+    if (along < 0) return segmentStart;
+    if (along > segmentLength) return segmentEnd;
+    
+    return segmentStart + along * direction;
+}
+
+#pragma arguments
+
+float3 glowColor;
+float glowDistance;
+float glowAmount;
+
+#pragma body
+
+// iPhone15_Pro_NaturalTitanium-D83-D84.usdz
+const float2 leftFlatEdgeBottom = float2(10.1208, 1 - 6.0634);
+const float2 rightFlatEdgeBottom = float2(10.1230, 1 - 4.9438);
+const float2 leftFlatEdgeTop = float2(10.6581, 1 - 6.0675);
+const float2 rightFlatEdgeTop = float2(10.6603, 1 - 4.9480);
+const float2 roundEdgeTop = float2(10.9629, 1 - 5.5094);
+
+const float2 endpointCenterUV1 = (leftFlatEdgeBottom + rightFlatEdgeBottom) / 2;
+const float2 endpointCenterUV2 = (leftFlatEdgeTop + rightFlatEdgeTop) / 2;
+
+const float roundCapHalfWidth = roundEdgeTop.x - endpointCenterUV2.x;
+const float roundCapHalfHeight = endpointCenterUV2.y - leftFlatEdgeTop.y;
+
+const float2 buttonRegionCenter = (endpointCenterUV1 +  endpointCenterUV2) / 2;
+
+const float2 uvAspect = float2(roundCapHalfHeight / roundCapHalfWidth, 1);
+float2 localUV = _surface.diffuseTexcoord - buttonRegionCenter;
+localUV *= uvAspect;
+
+const float2 scaledEndpoint1 = (endpointCenterUV1 - buttonRegionCenter) * uvAspect;
+const float2 scaledEndpoint2 = (endpointCenterUV2 - buttonRegionCenter) * uvAspect;
+
+const float buttonDistanceSquared = distance_squared(localUV, closestPointOnLineSegmentF(localUV, scaledEndpoint1, scaledEndpoint2));
+
+float skipGlowDistance = glowDistance + roundCapHalfHeight;
+if (buttonDistanceSquared < skipGlowDistance * skipGlowDistance) {
+    float buttonDistance = sqrt(buttonDistanceSquared) - roundCapHalfHeight;
+    float effectiveGlowAmount = pow(saturate(1 - (buttonDistance / glowDistance)), 3 /* falloff */) * glowAmount;
+    
+    _surface.emission += effectiveGlowAmount * float4(pow(glowColor, 2.2 /* gamma convert */), 0);
+}
