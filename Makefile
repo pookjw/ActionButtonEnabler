@@ -1,3 +1,4 @@
+FINALPACKAGE=1
 TARGET := iphone:clang:latest
 THEOS_PACKAGE_SCHEME = rootless
 

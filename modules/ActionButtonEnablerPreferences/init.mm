@@ -5,7 +5,7 @@
 #import <substrate.h>
 #import <cstdint>
 
-namespace AE_PSUIPrefsListController {
+namespace AE_PSGGeneralController {
     namespace viewDidLoad {
         void (*original)(__kindof UIViewController *self, SEL _cmd);
         void custom(__kindof UIViewController *self, SEL _cmd) {
@@ -16,7 +16,7 @@ namespace AE_PSUIPrefsListController {
             __block auto retainedSelf = self;
             UIBarButtonItem *item = [[UIBarButtonItem alloc] initWithPrimaryAction:[UIAction actionWithTitle:[NSString string] image:[UIImage systemImageNamed:@"button.programmable"] identifier:nil handler:^(__kindof UIAction * _Nonnull action) {
                 __kindof UIViewController *actionButtonSettings = [NSClassFromString(@"ActionButtonSettings") new];
-                [retainedSelf presentViewController:actionButtonSettings animated:YES completion:nil];
+                [retainedSelf.navigationController pushViewController:actionButtonSettings animated:YES];
                 [actionButtonSettings release];
             }]];
             
@@ -57,10 +57,10 @@ __attribute__((constructor)) static void init() {
     dlopen("/System/Library/PreferenceBundles/ActionButtonSettings.bundle/ActionButtonSettings", RTLD_NOW);
 
     MSHookMessageEx(
-        NSClassFromString(@"PSUIPrefsListController"),
+        NSClassFromString(@"PSGGeneralController"),
         @selector(viewDidLoad),
-        reinterpret_cast<IMP>(&AE_PSUIPrefsListController::viewDidLoad::custom),
-        reinterpret_cast<IMP *>(&AE_PSUIPrefsListController::viewDidLoad::original)
+        reinterpret_cast<IMP>(&AE_PSGGeneralController::viewDidLoad::custom),
+        reinterpret_cast<IMP *>(&AE_PSGGeneralController::viewDidLoad::original)
     );
 
     MSHookMessageEx(
